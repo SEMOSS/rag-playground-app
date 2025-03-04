@@ -10,8 +10,14 @@ import {
     IconButton,
     TextField,
     Autocomplete,
+    List,
+    ListItem,
+    ListItemText,
+    ListItemSecondaryAction,
+    Divider,
+    Paper,
 } from '@mui/material';
-import { FileUploadOutlined } from '@mui/icons-material';
+import { FileUploadOutlined, DeleteOutline } from '@mui/icons-material';
 import { createFilterOptions } from '@mui/material/Autocomplete';
 import Dropzone from 'react-dropzone';
 import { useInsight } from '@semoss/sdk-react';
@@ -35,6 +41,8 @@ const StyledModal = styled(Box)(({ theme }) => ({
     boxShadow: '24',
     p: '4',
     padding: theme.spacing(4),
+    maxHeight: '80vh',
+    overflowY: 'auto',
 }));
 
 const StyledLoadingDiv = styled('div')(() => ({
@@ -75,6 +83,13 @@ const StyledLink = styled('button')(({ theme }) => ({
     border: '0px',
 }));
 
+const DocumentList = styled(Paper)(({ theme }) => ({
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+    maxHeight: '200px',
+    overflowY: 'auto',
+}));
+
 const ENCODER_OPTIONS = ['FAISS', 'Weaviate', 'Pinecone', 'pgvector'];
 
 export const VectorModal = ({
@@ -89,6 +104,8 @@ export const VectorModal = ({
     const [newVector, setNewVectorDB] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [file, setFile] = useState<File | null>(null);
+    const [documents, setDocuments] = useState<string[]>([]);
+    const [isDeleting, setIsDeleting] = useState<string | null>(null);
     const { actions } = useInsight();
 
     const [fileError, setFileError] = useState<string | null>(null);
@@ -98,6 +115,51 @@ export const VectorModal = ({
     useEffect(() => {
         setNewVectorDB(null);
     }, [open]);
+
+    useEffect(() => {
+        if (open && selectedVectorDB) {
+            fetchDocuments();
+        }
+    }, [open, selectedVectorDB]);
+
+    const fetchDocuments = async () => {
+        if (selectedVectorDB) {
+            try {
+                const pixel = `ListDocumentsInVectorDatabase(engine="${selectedVectorDB.database_id}");`;
+                const response = await actions.run(pixel);
+                const documentsList = response.pixelReturn[0].output;
+                console.log("DOC LIST: ", documentsList);
+                
+                // Check if output is array before mapping
+                if (Array.isArray(documentsList)) {
+                    // Extract just the document names (first element of each array item)
+                    setDocuments(documentsList.map(doc => doc.fileName));
+                } else {
+                    // If not an array, set to empty array
+                    setDocuments([]);
+                    console.warn('Unexpected response format from ListDocumentsInVectorDatabase');
+                }
+            } catch (e) {
+                setError('Failed to fetch documents from vector database');
+                console.error(e);
+            }
+        }
+    };
+
+    const deleteDocument = async (fileName: string) => {
+        setIsDeleting(fileName);
+        try {
+            const pixel = `RemoveDocumentFromVectorDatabase(engine="${selectedVectorDB.database_id}", filePaths=["${fileName}"]);`;
+            await actions.run(pixel);
+            // Refresh the document list
+            await fetchDocuments();
+        } catch (e) {
+            setError(`Failed to delete document: ${fileName}`);
+            console.error(e);
+        } finally {
+            setIsDeleting(null);
+        }
+    };
 
     const closingFunctions = () => {
         setLoading(false);
@@ -117,16 +179,12 @@ export const VectorModal = ({
                 const { output, operationType } = response.pixelReturn[0];
                 engine = output;
                 if (operationType.indexOf('ERROR') > -1) {
-                    console.log("UH HERE IT IS");
                     throw new Error(output as string);
                 }
             } catch (e) {
                 if (e.message) {
-                    console.log("UH HERE IT IS pt2");
-                    console.log(e)
                     setError(e.message);
                 } else {
-                    console.log(e);
                     setError(
                         'There was an error creating your vector DB, please check pixel calls',
                     );
@@ -148,7 +206,6 @@ export const VectorModal = ({
                 `;
                 await actions.run(pixel).then((response) => {
                     const { output, operationType } = response.pixelReturn[0];
-                    console.log(operationType.indexOf('ERROR'));
                     if (operationType.indexOf('ERROR') > -1) {
                         throw new Error(output as string);
                     }
@@ -167,12 +224,56 @@ export const VectorModal = ({
         }
     };
 
+    const renderDocumentsList = () => {
+        if (!selectedVectorDB || documents.length === 0) {
+            return (
+                <Typography variant="body2" sx={{ textAlign: 'center', padding: 2 }}>
+                    No documents found in this vector database.
+                </Typography>
+            );
+        }
+
+        return (
+            <List dense>
+                {documents.map((doc, index) => (
+                    <React.Fragment key={doc}>
+                        <ListItem>
+                            <ListItemText 
+                                primary={doc} 
+                                primaryTypographyProps={{ 
+                                    style: { 
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                    } 
+                                }}
+                            />
+                            <ListItemSecondaryAction>
+                                {isDeleting === doc ? (
+                                    <CircularProgress size={24} />
+                                ) : (
+                                    <IconButton 
+                                        edge="end" 
+                                        aria-label="delete"
+                                        onClick={() => deleteDocument(doc)}
+                                    >
+                                        <DeleteOutline />
+                                    </IconButton>
+                                )}
+                            </ListItemSecondaryAction>
+                        </ListItem>
+                        {index < documents.length - 1 && <Divider />}
+                    </React.Fragment>
+                ))}
+            </List>
+        );
+    };
+
     const firstStep = () => {
         return (
             <>
                 <StyledButtonGroup>
                     <IconButton onClick={() => setOpen(false)}>
-                        {' '}
                         <CloseIcon />
                     </IconButton>
                 </StyledButtonGroup>
@@ -217,7 +318,7 @@ export const VectorModal = ({
                         <li {...props}>{option.database_name}</li>
                     )}
                     onChange={(event, newVectorDB: any) => {
-                        if (newVectorDB.inputValue) {
+                        if (newVectorDB?.inputValue) {
                             setNewVectorDB(newVectorDB.inputValue);
                         }
                         setSelectedVectorDB(newVectorDB);
@@ -230,6 +331,19 @@ export const VectorModal = ({
                         />
                     )}
                 />
+
+                {selectedVectorDB && (
+                    <>
+                        <StyledTitle variant="h6">Documents in Database</StyledTitle>
+                        <Typography variant="caption">
+                            These are the documents currently embedded in your selected vector database.
+                            You can delete any document by clicking the delete icon.
+                        </Typography>
+                        <DocumentList elevation={1}>
+                            {renderDocumentsList()}
+                        </DocumentList>
+                    </>
+                )}
 
                 <StyledTitle variant="h6">Step 2: Select Type</StyledTitle>
                 <StyledTypography variant="caption">
@@ -354,16 +468,14 @@ export const VectorModal = ({
                         color="primary"
                         onClick={() => setOpen(false)}
                     >
-                        {' '}
-                        Close{' '}
+                        Close
                     </StyledButton>
                     <StyledButton
                         variant="outlined"
                         disabled={!file?.name && !newVector}
                         onClick={handleSubmit}
                     >
-                        {' '}
-                        Finish{' '}
+                        Finish
                     </StyledButton>
                 </StyledButtonGroup>
             </>
