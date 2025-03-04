@@ -174,7 +174,8 @@ export const VectorModal = ({
         let engine;
         if (newVector) {
             try {
-                const pixel = `CreateVectorDatabaseEngine ( database = [ "${newVector}" ] , conDetails = [ { "VECTOR_TYPE" : "FAISS" , "NAME" : "${newVector}" , "CONNECTION_URL" : "@BaseFolder@/vector/@ENGINE@/" , "ENCODER_NAME" : "BAAI/bge-large-en-v1.5" , "ENCODER_TYPE" : "huggingface" } ] ) ;`;
+
+                const pixel = `CreateVectorDatabaseEngine (database=["${newVector}"], conDetails=[{"NAME":"${newVector}","VECTOR_TYPE":"FAISS","EMBEDDER_ENGINE_ID":"e4449559-bcff-4941-ae72-0e3f18e06660","INDEX_CLASSES":"default","CHUNKING_STRATEGY":"ALL","CONTENT_LENGTH":512,"CONTENT_OVERLAP":20,"DISTANCE_METHOD":"Squared Euclidean (L2) distance","RETAIN_EXTRACTED_TEXT":"false"}]) ;`;
                 const response = await actions.run(pixel);
                 const { output, operationType } = response.pixelReturn[0];
                 engine = output;
