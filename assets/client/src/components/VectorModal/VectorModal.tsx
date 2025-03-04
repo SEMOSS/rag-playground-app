@@ -149,7 +149,8 @@ export const VectorModal = ({
     const deleteDocument = async (fileName: string) => {
         setIsDeleting(fileName);
         try {
-            const pixel = `RemoveDocumentFromVectorDatabase(engine="${selectedVectorDB.database_id}", filePaths=["${fileName}"]);`;
+            const pixel = `RemoveDocumentFromVectorDatabase ( engine = \"${selectedVectorDB.database_id}\" , fileNames = [ \"${fileName}\" ] );`;
+            console.log("DELETE DOCS pixel call: ", pixel)
             await actions.run(pixel);
             // Refresh the document list
             await fetchDocuments();
@@ -174,7 +175,6 @@ export const VectorModal = ({
         let engine;
         if (newVector) {
             try {
-
                 const pixel = `CreateVectorDatabaseEngine (database=["${newVector}"], conDetails=[{"NAME":"${newVector}","VECTOR_TYPE":"FAISS","EMBEDDER_ENGINE_ID":"e4449559-bcff-4941-ae72-0e3f18e06660","INDEX_CLASSES":"default","CHUNKING_STRATEGY":"ALL","CONTENT_LENGTH":512,"CONTENT_OVERLAP":20,"DISTANCE_METHOD":"Squared Euclidean (L2) distance","RETAIN_EXTRACTED_TEXT":"false"}]) ;`;
                 const response = await actions.run(pixel);
                 const { output, operationType } = response.pixelReturn[0];
