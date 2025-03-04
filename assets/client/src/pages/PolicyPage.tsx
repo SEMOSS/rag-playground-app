@@ -7,7 +7,7 @@ import { FiSend, FiPaperclip, FiX } from 'react-icons/fi';
 import { IoIosOptions } from "react-icons/io";
 import ReactMarkdown from 'react-markdown';
 
-// Typess
+// Types
 export interface Model {
   database_name?: string;
   database_id: string;
@@ -55,12 +55,80 @@ export const PolicyPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
 
-  // Example questions... TODO: remove?
-  const exampleQuestions = [
-    "What are our policies on remote work?",
-    "How do I submit a PTO request?",
-    "What's the timeline for performance reviews?",
-  ];
+  // Example questions -> Todo: Remove?
+  // const exampleQuestions = [
+  //   "What are our policies on remote work?",
+  //   "How do I submit a PTO request?",
+  //   "What's the timeline for performance reviews?",
+  // ];
+
+  // Function to upload attached file to vector database
+  const uploadAttachedFile = async () => {
+    if (!attachedFile) {
+      setError('Please select a file to upload');
+      return;
+    }
+    
+    if (!selectedVectorDB || !selectedVectorDB.database_id) {
+      setError('Please select a vector database first');
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      // Add a message to indicate upload is in progress
+      setMessages(prev => [...prev, { 
+        type: 'user', 
+        content: `Uploading file: ${attachedFile.name}` 
+      }]);
+      
+      // Add loading message from assistant
+      setMessages(prev => [...prev, { 
+        type: 'assistant', 
+        content: '...' 
+      }]);
+      
+      // Upload the file
+      const fileUpload = await actions.upload(attachedFile, '');
+      const { fileLocation } = fileUpload[0];
+      
+      // Create embeddings from the document
+      const pixel = `CreateEmbeddingsFromDocuments(engine="${selectedVectorDB.database_id}", filePaths=["${fileLocation.slice(1)}"]);`;
+      const response = await actions.run(pixel);
+      const { output, operationType } = response.pixelReturn[0];
+      
+      if (operationType.indexOf('ERROR') > -1) {
+        throw new Error(typeof output === 'string' ? output : 'Failed to upload document');
+      }
+      
+      // Update the loading message with success message
+      setMessages(prev => [
+        ...prev.slice(0, -1),
+        { 
+          type: 'assistant', 
+          content: `File "${attachedFile.name}" was successfully uploaded to the vector database.` 
+        }
+      ]);
+      
+      // Clear the attachment after successful upload
+      removeAttachedFile();
+      
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to upload document';
+      setError(errorMessage);
+      
+      // Update the loading message with error message
+      setMessages(prev => [
+        ...prev.slice(0, -1),
+        { 
+          type: 'assistant', 
+          content: `Error uploading file: ${errorMessage}` 
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const ask = async (questionText: string) => {
     try {
@@ -77,49 +145,57 @@ export const PolicyPage = () => {
       // Add loading message from assistant
       setMessages(prev => [...prev, { type: 'assistant', content: '...' }]);
 
-      let pixel = `VectorDatabaseQuery(engine="${selectedVectorDB.database_id}", command="${questionText}", limit=${limit})`;
-      const response = await actions.run(pixel);
-      const { output, operationType } = response.pixelReturn[0];
-      
-      if (operationType.indexOf('ERROR') > -1) {
-        throw new Error(typeof output === 'object' && output !== null && 'response' in output 
-          ? String(output.response) 
-          : 'Unknown error');
-      }
-      
-      const outputArray = Array.isArray(output) ? output : [];
-      
       let context_docs = [];
       let temp_urls = [];
- 
-      for (let i = 0; i < outputArray.length - 1; i++) {
-        if (outputArray[i]) {
-          const content = typeof outputArray[i] === 'object' && outputArray[i] !== null
-            ? (outputArray[i].content || outputArray[i].Content)
-            : '';
+      
+      // Only query vector DB if one is selected
+      if (selectedVectorDB && selectedVectorDB.database_id) {
+        let pixel = `VectorDatabaseQuery(engine="${selectedVectorDB.database_id}", command="${questionText}", limit=${limit})`;
+        const response = await actions.run(pixel);
+        const { output, operationType } = response.pixelReturn[0];
+        
+        if (operationType.indexOf('ERROR') > -1) {
+          throw new Error(typeof output === 'object' && output !== null && 'response' in output 
+            ? String(output.response) 
+            : 'Unknown error');
+        }
+        
+        const outputArray = Array.isArray(output) ? output : [];
+        
+        for (let i = 0; i < outputArray.length - 1; i++) {
+          if (outputArray[i]) {
+            const content = typeof outputArray[i] === 'object' && outputArray[i] !== null
+              ? (outputArray[i].content || outputArray[i].Content)
+              : '';
+              
+            const source = typeof outputArray[i] === 'object' && outputArray[i] !== null 
+              ? outputArray[i].Source 
+              : '';
+              
+            if (content) {
+              context_docs.push({ role: 'system', content: `${content}` });
+            }
             
-          const source = typeof outputArray[i] === 'object' && outputArray[i] !== null 
-            ? outputArray[i].Source 
-            : '';
-            
-          if (content) {
-            context_docs.push({ role: 'system', content: `${content}` });
-          }
-          
-          if (source) {
-            temp_urls.push(source);
+            if (source) {
+              temp_urls.push(source);
+            }
           }
         }
+        
+        setUrls(temp_urls.map((url, i) => ({ ID: i, link: url })));
       }
 
-      setUrls(temp_urls.map((url, i) => ({ ID: i, link: url })));
-      
       // Convert context docs to string representation -> pixel cmd
       const contextDocsString = context_docs.length > 0 
         ? JSON.stringify(context_docs).slice(1, -1) 
         : '';
       
-      pixel = `LLM(engine="${selectedModel.database_id}", command="${questionText}", paramValues=[{"full_prompt":[{"role": "system", "content": "You are an intelligent AI designed to answer queries based on policy documents. ${questionText}."}, ${contextDocsString}]}, {"temperature":${temperature}}])`;
+      // Adjust system message based on whether context is available
+      const systemMessage = context_docs.length > 0
+        ? "You are an intelligent AI designed to answer queries based on policy documents."
+        : "You are an intelligent AI assistant. Answer the following question to the best of your ability.";
+      
+      const pixel = `LLM(engine="${selectedModel.database_id}", command="${questionText}", paramValues=[{"full_prompt":[{"role": "system", "content": "${systemMessage} ${questionText}."}, ${contextDocsString}]}, {"temperature":${temperature}}])`;
       
       const LLMresponse = await actions.run(pixel);
       const { output: LLMOutput, operationType: LLMOperationType } = LLMresponse.pixelReturn[0];
@@ -156,6 +232,13 @@ export const PolicyPage = () => {
   };
 
   const handleSend = () => {
+    // If there's an attached file, upload it to the vector DB
+    if (attachedFile) {
+      uploadAttachedFile();
+      return;
+    }
+    
+    // Otherwise, process the text message as usual
     if (!inputValue.trim() || isLoading) return;
     
     const question = inputValue.trim();
@@ -191,7 +274,7 @@ export const PolicyPage = () => {
       
       textareaRef.current.style.height = Math.min(scrollHeight, maxHeight) + 'px';
       
-      // Content > max height ->S scrolling
+      // (Content > max height) -> scrolling
       if (scrollHeight > maxHeight) {
         textareaRef.current.style.overflowY = 'auto';
       } else {
@@ -238,7 +321,8 @@ export const PolicyPage = () => {
 
         if (Array.isArray(output)) {
             setVectorOptions(output);
-            setSelectedVectorDB(output[10]);
+            // setSelectedVectorDB(output[10]);
+            setRefresh(false);
         }
     });
 
@@ -272,7 +356,7 @@ export const PolicyPage = () => {
 
         if (Array.isArray(output)) {
             setVectorOptions(output);
-            setSelectedVectorDB(output[10]);
+            // setSelectedVectorDB(output[10]);
             setRefresh(false);
         }
     });
@@ -329,10 +413,10 @@ export const PolicyPage = () => {
               <EmptyChat>
                 <EmptyChatTitle>Start a conversation</EmptyChatTitle>
                 <EmptyChatText>
-                  Great for asking question about complex policies, procedures, or systems.
+                  Use the chat settings in the upper righthand corner to tailor the conversation to fit your needs.
                 </EmptyChatText>
               </EmptyChat>
-              <ExampleGrid>
+              {/* <ExampleGrid>
                 {exampleQuestions.map((question, idx) => (
                   <ExampleButton 
                     key={idx}
@@ -342,7 +426,7 @@ export const PolicyPage = () => {
                     {question}
                   </ExampleButton>
                 ))}
-              </ExampleGrid>
+              </ExampleGrid> */}
             </>
           ) : (
             messages.map((message, idx) => (
@@ -366,7 +450,7 @@ export const PolicyPage = () => {
           <div ref={messagesEndRef} />
         </MessagesContainer>
         
-        {/* File attahment area */}
+        {/* File attachments in chat */}
         {attachedFile && (
           <AttachmentContainer>
             <AttachmentPreview>
@@ -397,13 +481,13 @@ export const PolicyPage = () => {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyPress}
               onInput={handleTextareaInput}
-              placeholder="Type your question here..."
+              placeholder={attachedFile ? "Click send to upload file or add a message" : "Type your question here..."}
               rows={1}
               disabled={isLoading}
             />
             
             <SendButton 
-              disabled={!inputValue.trim() && !attachedFile}
+              disabled={(!inputValue.trim() && !attachedFile) || isLoading}
               onClick={handleSend}
             >
               <FiSend size={20} />

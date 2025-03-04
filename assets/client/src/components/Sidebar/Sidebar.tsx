@@ -67,12 +67,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch docs when vector DB changes
+  // Fetch documents when vector DB changes
   useEffect(() => {
     if (selectedVectorDB && selectedVectorDB.database_id) {
       fetchDocuments();
     }
-  }, [selectedVectorDB]);
+  }, [selectedVectorDB, isOpen]);
 
   const fetchDocuments = async () => {
     if (selectedVectorDB && selectedVectorDB.database_id) {
@@ -242,7 +242,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       
       <SettingsSection>
         <SettingsSectionTitle onClick={() => toggleSection('vector')}>
-          Vector Database
+          Chat Knowledge
         </SettingsSectionTitle>
         
         {activeSection === 'vector' && (
