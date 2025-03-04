@@ -185,13 +185,13 @@ export const PolicyPage = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       
-      // Set max height to prevent excessive growth
+      // Set max height
       const maxHeight = 150;
       const scrollHeight = textareaRef.current.scrollHeight;
       
       textareaRef.current.style.height = Math.min(scrollHeight, maxHeight) + 'px';
       
-      // If content exceeds max height, enable scrolling
+      // Content > max height ->S scrolling
       if (scrollHeight > maxHeight) {
         textareaRef.current.style.overflowY = 'auto';
       } else {
@@ -302,7 +302,7 @@ export const PolicyPage = () => {
     <Container>
       <ChatContainer>
         <ChatHeaderContainer>
-          <Title>RAG Policy Bot</Title>
+          <Title>RAG Playground</Title>
           <HeaderControls>
             <ModelLabel>
               <ModelIcon>AI</ModelIcon>
@@ -366,7 +366,7 @@ export const PolicyPage = () => {
           <div ref={messagesEndRef} />
         </MessagesContainer>
         
-        {/* File Attachment Area */}
+        {/* File attahment area */}
         {attachedFile && (
           <AttachmentContainer>
             <AttachmentPreview>
@@ -433,7 +433,7 @@ export const PolicyPage = () => {
         isOpen={sideOpen}
       />
       
-      {/* Settings sidebar overlay */}
+      {/* settings sidebar overlay */}
       {sideOpen && (
         <SettingsOverlay onClick={() => setSideOpen(false)} />
       )}

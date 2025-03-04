@@ -67,7 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch documents when vector DB changes
+  // Fetch docs when vector DB changes
   useEffect(() => {
     if (selectedVectorDB && selectedVectorDB.database_id) {
       fetchDocuments();
