@@ -1,182 +1,9 @@
-import { useEffect, useState, useRef } from 'react'; // Added useRef for chat scrolling
-import {
-  styled,
-  Alert,
-  Box,
-  Button,
-  Stack,
-  LinearProgress,
-  TextField,
-  Typography,
-  Paper,
-  IconButton,
-  Modal,
-  Avatar,
-} from '@mui/material';
-import { useForm, Controller } from 'react-hook-form';
+import { useEffect, useState, useRef } from 'react';
 import { useInsight } from '@semoss/sdk-react';
-import {Sidebar} from '../components/Sidebar';
-import {VectorModal} from '../components/VectorModal';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import {Markdown} from '@/components/common';
-import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';
+import { Sidebar } from '../components/Sidebar';
+import { Markdown } from '@/components/common';
 
-const StyledChatContainer = styled('div')(() => ({
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100%',
-  width: '100%',
-}));
-
-const StyledMessagesContainer = styled('div')(() => ({
-  flexGrow: 1,
-  overflowY: 'auto',
-  padding: '16px',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '16px',
-  maxHeight: 'calc(100vh - 300px)',
-  '&::-webkit-scrollbar': {
-    width: '6px',
-  },
-  '&::-webkit-scrollbar-thumb': {
-    backgroundColor: '#bbb',
-    borderRadius: '3px',
-  },
-}));
-
-const StyledInputContainer = styled('div')(() => ({
-  display: 'flex',
-  padding: '16px',
-  borderTop: '1px solid #e0e0e0',
-}));
-
-const StyledInputWrapper = styled('div')(() => ({
-  display: 'flex',
-  alignItems: 'flex-end',
-  width: '100%',
-  border: '1px solid #e0e0e0',
-  borderRadius: '8px',
-  overflow: 'hidden',
-  backgroundColor: '#fff',
-}));
-
-const StyledTextarea = styled('textarea')(() => ({
-  flex: 1,
-  border: 'none',
-  resize: 'none',
-  padding: '12px 16px',
-  outline: 'none',
-  fontFamily: 'inherit',
-  fontSize: '16px',
-  minHeight: '48px',
-  maxHeight: '150px',
-}));
-
-const StyledSendButton = styled(Button)(() => ({
-  minWidth: '48px',
-  height: '48px',
-  borderRadius: '0',
-  padding: '0',
-}));
-
-const StyledMessageRow = styled('div')<{ isUser: boolean }>(({ isUser }) => ({
-  display: 'flex',
-  justifyContent: isUser ? 'flex-end' : 'flex-start',
-  width: '100%',
-}));
-
-const StyledMessage = styled('div')<{ isUser: boolean }>(({ isUser, theme }) => ({
-  maxWidth: '80%',
-  padding: '12px 16px',
-  borderRadius: '12px',
-  backgroundColor: isUser ? theme.palette.primary.main : '#f5f5f5',
-  color: isUser ? '#fff' : 'inherit',
-  wordBreak: 'break-word',
-}));
-
-const StyledAvatar = styled(Avatar)(({ theme }) => ({
-  backgroundColor: 'white',
-  marginRight: theme.spacing(2),
-}));
-
-const StyledExampleGrid = styled('div')(() => ({
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-  gap: '16px',
-  padding: '16px',
-}));
-
-const StyledExampleButton = styled(Button)(({ theme }) => ({
-  padding: theme.spacing(2),
-  textAlign: 'left',
-  justifyContent: 'flex-start',
-  height: '100%',
-  borderRadius: '8px',
-  backgroundColor: '#f5f5f5',
-  color: 'inherit',
-  '&:hover': {
-    backgroundColor: '#e0e0e0',
-  },
-}));
-
-const StyledContainer = styled('div')<{ sidebarOpen: boolean }>(({ theme, sidebarOpen }) => ({
-  padding: `${theme.spacing(4)} ${theme.spacing(0)} ${theme.spacing(0)} ${sidebarOpen ? '280px' : '0'}`,
-  maxWidth: '1000px',
-  display: 'flex',
-  transition: 'padding 0.3s ease',
-}));
-
-const StyledPaper = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(4),
-  width: '100%',
-  display: 'flex', 
-  flexDirection: 'column',
-  height: 'calc(100vh - 100px)', 
-}));
-
-const StyledLayout = styled(Stack)(() => ({
-  display: 'flex',
-  flexDirection: 'row',
-}));
-
-const StyledButton = styled(IconButton)(() => ({
-  position: 'fixed',
-  left: '0%',
-  marginRight: 'auto',
-}));
-
-// Ellipses loading indicator :)
-const LoadingDots = () => {
-  const dotStyle = {
-    display: 'inline-block',
-    width: '6px',
-    height: '6px',
-    backgroundColor: '#666',
-    borderRadius: '50%',
-    margin: '0 3px',
-    animation: 'bouncingDots 1.4s infinite ease-in-out both',
-  };
-
-  return (
-    <>
-      <style>
-        {`
-          @keyframes bouncingDots {
-            0%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-8px); }
-          }
-        `}
-      </style>
-      <div style={{ display: 'flex', gap: '4px' }}>
-        <div style={{ ...dotStyle, animationDelay: '0s' }} />
-        <div style={{ ...dotStyle, animationDelay: '0.2s' }} />
-        <div style={{ ...dotStyle, animationDelay: '0.4s' }} />
-      </div>
-    </>
-  );
-};
-
+// Types
 export interface Model {
   database_name?: string;
   database_id: string;
@@ -203,32 +30,26 @@ export const PolicyPage = () => {
     conclusion: '',
   });
 
-  const [modelOptions, setModelOptions] = useState([]);
+  const [modelOptions, setModelOptions] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState<Model>({} as Model);
-  const [vectorOptions, setVectorOptions] = useState([]);
+  const [vectorOptions, setVectorOptions] = useState<Model[]>([]);
   const [selectedVectorDB, setSelectedVectorDB] = useState<Model>({} as Model);
-  const [storageOptions, setStorageOptions] = useState([]);
+  const [storageOptions, setStorageOptions] = useState<Model[]>([]);
   const [selectedStorage, setSelectedStorage] = useState<Model>({} as Model);
 
-  const [open, setOpen] = useState<boolean>(false);
   const [refresh, setRefresh] = useState<boolean>(false);
   const [sideOpen, setSideOpen] = useState<boolean>(true);
-  const { control, handleSubmit } = useForm({
-    defaultValues: {
-      QUESTION: '',
-    },
-  });
-
+  
   const [limit, setLimit] = useState<number>(3);
   const [temperature, setTemperature] = useState<number>(0);
 
-  // Added new states for chat functionality
+  // Chat functionality states
   const [messages, setMessages] = useState<{ type: string; content: string }[]>([]);
   const [inputValue, setInputValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Example questions - change/remove later
+  // Example questions
   const exampleQuestions = [
     "What are our policies on remote work?",
     "How do I submit a PTO request?",
@@ -260,7 +81,6 @@ export const PolicyPage = () => {
           : 'Unknown error');
       }
       
-
       const outputArray = Array.isArray(output) ? output : [];
       
       let context_docs = [];
@@ -374,7 +194,7 @@ export const PolicyPage = () => {
   useEffect(() => {
     setIsLoading(true);
     
-    let pixel = `MyEngines ( engineTypes=["MODEL"]);`;
+    let pixel = `MyEngines(engineTypes=["MODEL"]);`;
 
     actions.run(pixel).then((response) => {
         const { output, operationType } = response.pixelReturn[0];
@@ -389,8 +209,8 @@ export const PolicyPage = () => {
         }
     });
 
-    // Grab all Vector DBs in GCAI
-    pixel = `MyEngines ( engineTypes=["VECTOR"]);`;
+    // Grab all Vector DBs
+    pixel = `MyEngines(engineTypes=["VECTOR"]);`;
 
     actions.run(pixel).then((response) => {
         const { output, operationType } = response.pixelReturn[0];
@@ -405,10 +225,9 @@ export const PolicyPage = () => {
         }
     });
 
-    pixel = `MyEngines ( engineTypes=["STORAGE"]);`;
+    pixel = `MyEngines(engineTypes=["STORAGE"]);`;
 
     actions.run(pixel).then((response) => {
-        // Get databaseID from output
         const { output, operationType } = response.pixelReturn[0];
 
         if (operationType.indexOf("ERROR") > -1) {
@@ -420,18 +239,12 @@ export const PolicyPage = () => {
             setSelectedStorage(output[1]);
         }
     });
-
-    pixel = `CreateRestFunctionEngine --help`;
-
-    actions.run(pixel).then((response) => {
-        console.log(response);
-    });
     
     setIsLoading(false);
   }, []);
         
   useEffect(() => {
-    const pixel = `MyEngines ( engineTypes=["VECTOR"]);`;
+    const pixel = `MyEngines(engineTypes=["VECTOR"]);`;
 
     actions.run(pixel).then((response) => {
         const { output, operationType } = response.pixelReturn[0];
@@ -449,111 +262,352 @@ export const PolicyPage = () => {
   }, [refresh]);
 
   return (
-    <StyledLayout justifyContent="center">
-      <Stack>
-        {sideOpen ? (
-          <Sidebar
-            modelOptions={modelOptions}
-            selectedModel={selectedModel}
-            setSelectedModel={setSelectedModel}
-            vectorOptions={vectorOptions}
-            selectedVectorDB={selectedVectorDB}
-            setSelectedVectorDB={setSelectedVectorDB}
-            storageOptions={storageOptions}
-            selectedStorage={selectedStorage}
-            setSelectedStorage={setSelectedStorage}
-            //sideOpen={sideOpen}
-            setSideOpen={setSideOpen}
-            setOpen={setOpen}
-            limit={limit}
-            setLimit={setLimit}
-            temperature={temperature}
-            setTemperature={setTemperature}
-          />
-        ) : (
-          <StyledButton onClick={() => setSideOpen(!sideOpen)}>
-            <ArrowForwardIosIcon/>
-          </StyledButton>
-        )}
-
-        <StyledContainer sidebarOpen={sideOpen}>
-          <StyledPaper variant={'elevation'} elevation={2} square>
-            <Typography variant="h5">RAG Policy Bot</Typography>
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              Assists users in answering complex policy, operational procedure, and system questions.
-            </Typography>
-
-            {error && <Alert color="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-            {/* Chat interface (replacing the old form) */}
-            <StyledChatContainer>
-              <StyledMessagesContainer>
-                {messages.length === 0 ? (
-                  <StyledExampleGrid>
-                    {exampleQuestions.map((question, idx) => (
-                      <StyledExampleButton 
-                        key={idx}
-                        onClick={() => handleExampleClick(question)}
-                        disabled={isLoading}
-                        variant="outlined"
-                      >
-                        {question}
-                      </StyledExampleButton>
-                    ))}
-                  </StyledExampleGrid>
-                ) : (
-                  messages.map((message, idx) => (
-                    <StyledMessageRow key={idx} isUser={message.type === 'user'}>
-                      <StyledMessage isUser={message.type === 'user'}>
-                        {message.content === '...' ? (
-                          <LoadingDots />
-                        ) : (
-                          <Markdown>{message.content}</Markdown>
-                        )}
-                      </StyledMessage>
-                    </StyledMessageRow>
-                  ))
-                )}
-                <div ref={messagesEndRef} />
-              </StyledMessagesContainer>
-
-              <StyledInputContainer>
-                <StyledInputWrapper>
-                  <StyledTextarea
-                    ref={textareaRef}
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    onInput={handleTextareaInput}
-                    placeholder="Type your question here..."
-                    rows={1}
-                    disabled={isLoading}
-                  />
-                  <StyledSendButton
-                    onClick={handleSend}
-                    disabled={!inputValue.trim() || isLoading}
-                    color="primary"
-                  >
-                    {isLoading ? "..." : "Send"}
-                  </StyledSendButton>
-                </StyledInputWrapper>
-              </StyledInputContainer>
-            </StyledChatContainer>
-          </StyledPaper>
-          {isLoading && <LinearProgress />}
-        </StyledContainer>
-      </Stack>
-      <Modal open={open} onClose={() => setOpen(false)}>
-        <VectorModal
-          setOpen={setOpen}
-          open={open}
+    <div className="policy-page">
+      {sideOpen && (
+        <Sidebar
+          modelOptions={modelOptions}
+          selectedModel={selectedModel}
+          setSelectedModel={setSelectedModel}
           vectorOptions={vectorOptions}
-          setRefresh={setRefresh}
-          setSelectedVectorDB={setSelectedVectorDB}
           selectedVectorDB={selectedVectorDB}
+          setSelectedVectorDB={setSelectedVectorDB}
+          storageOptions={storageOptions}
+          selectedStorage={selectedStorage}
+          setSelectedStorage={setSelectedStorage}
+          setSideOpen={setSideOpen}
+          setOpen={() => {}} // This prop is no longer needed but kept for compatibility
+          limit={limit}
+          setLimit={setLimit}
+          temperature={temperature}
+          setTemperature={setTemperature}
+          setRefresh={setRefresh}
           setError={setError}
         />
-      </Modal>
-    </StyledLayout>
+      )}
+
+      <div className={`main-content ${sideOpen ? 'with-sidebar' : ''}`}>
+        {!sideOpen && (
+          <button className="open-sidebar-button" onClick={() => setSideOpen(true)}>
+            ▶
+          </button>
+        )}
+
+        <div className="chat-container">
+          <div className="chat-header">
+            <h2>RAG Policy Bot</h2>
+            <p>Assists users in answering complex policy, operational procedure, and system questions.</p>
+            
+            {error && (
+              <div className="error-alert">
+                {error}
+              </div>
+            )}
+          </div>
+
+          <div className="messages-container">
+            {messages.length === 0 ? (
+              <div className="example-grid">
+                {exampleQuestions.map((question, idx) => (
+                  <button 
+                    key={idx}
+                    className="example-button"
+                    onClick={() => handleExampleClick(question)}
+                    disabled={isLoading}
+                  >
+                    {question}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              messages.map((message, idx) => (
+                <div 
+                  key={idx} 
+                  className={`message-row ${message.type === 'user' ? 'user-message' : 'assistant-message'}`}
+                >
+                  <div className="message-content">
+                    {message.content === '...' ? (
+                      <div className="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                    ) : (
+                      <Markdown>{message.content}</Markdown>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+            <div ref={messagesEndRef}></div>
+          </div>
+
+          <div className="input-container">
+            <div className="input-wrapper">
+              <textarea
+                ref={textareaRef}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={handleKeyPress}
+                onInput={handleTextareaInput}
+                placeholder="Type your question here..."
+                rows={1}
+                disabled={isLoading}
+              />
+              <button
+                className="send-button"
+                onClick={handleSend}
+                disabled={!inputValue.trim() || isLoading}
+              >
+                {isLoading ? "..." : "Send"}
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {isLoading && (
+          <div className="progress-bar">
+            <div className="progress-bar-inner"></div>
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        .policy-page {
+          display: flex;
+          height: 100vh;
+          background-color: #f5f5f5;
+        }
+        
+        .main-content {
+          flex: 1;
+          padding: 20px;
+          transition: margin 0.3s ease;
+          position: relative;
+        }
+        
+        .main-content.with-sidebar {
+          margin-left: 280px;
+        }
+        
+        .open-sidebar-button {
+          position: fixed;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          background-color: #f5f5f5;
+          border: 1px solid #ccc;
+          border-left: none;
+          padding: 20px 8px;
+          border-radius: 0 4px 4px 0;
+          cursor: pointer;
+          z-index: 5;
+        }
+        
+        .chat-container {
+          max-width: 1000px;
+          margin: 0 auto;
+          background-color: white;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+          display: flex;
+          flex-direction: column;
+          height: calc(100vh - 40px);
+          overflow: hidden;
+        }
+        
+        .chat-header {
+          padding: 24px;
+          border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .chat-header h2 {
+          margin: 0 0 8px;
+          font-size: 24px;
+          font-weight: 500;
+        }
+        
+        .chat-header p {
+          margin: 0;
+          color: #666;
+        }
+        
+        .error-alert {
+          margin-top: 16px;
+          padding: 12px 16px;
+          background-color: #ffebee;
+          border-left: 4px solid #f44336;
+          color: #d32f2f;
+          border-radius: 4px;
+        }
+        
+        .messages-container {
+          flex: 1;
+          overflow-y: auto;
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        
+        .messages-container::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        .messages-container::-webkit-scrollbar-thumb {
+          background-color: #bbb;
+          border-radius: 3px;
+        }
+        
+        .example-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+          gap: 16px;
+          padding: 16px;
+        }
+        
+        .example-button {
+          padding: 16px;
+          text-align: left;
+          justify-content: flex-start;
+          height: 100%;
+          border-radius: 8px;
+          background-color: #f5f5f5;
+          color: #333;
+          border: none;
+          cursor: pointer;
+          font-size: 14px;
+        }
+        
+        .example-button:hover {
+          background-color: #e0e0e0;
+        }
+        
+        .message-row {
+          display: flex;
+          justify-content: flex-start;
+          width: 100%;
+        }
+        
+        .message-row.user-message {
+          justify-content: flex-end;
+        }
+        
+        .message-content {
+          max-width: 80%;
+          padding: 12px 16px;
+          border-radius: 12px;
+          background-color: #f5f5f5;
+          color: #333;
+          word-break: break-word;
+        }
+        
+        .user-message .message-content {
+          background-color: #1976d2;
+          color: white;
+        }
+        
+        .loading-dots {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+        
+        .loading-dots span {
+          display: inline-block;
+          width: 6px;
+          height: 6px;
+          background-color: #666;
+          border-radius: 50%;
+          animation: bounce 1.4s infinite ease-in-out both;
+        }
+        
+        .loading-dots span:nth-child(1) {
+          animation-delay: -0.32s;
+        }
+        
+        .loading-dots span:nth-child(2) {
+          animation-delay: -0.16s;
+        }
+        
+        @keyframes bounce {
+          0%, 80%, 100% { 
+            transform: scale(0);
+          }
+          40% { 
+            transform: scale(1.0);
+          }
+        }
+        
+        .input-container {
+          padding: 16px;
+          border-top: 1px solid #e0e0e0;
+        }
+        
+        .input-wrapper {
+          display: flex;
+          align-items: flex-end;
+          width: 100%;
+          border: 1px solid #e0e0e0;
+          border-radius: 8px;
+          overflow: hidden;
+          background-color: #fff;
+        }
+        
+        textarea {
+          flex: 1;
+          border: none;
+          resize: none;
+          padding: 12px 16px;
+          outline: none;
+          font-family: inherit;
+          font-size: 16px;
+          min-height: 48px;
+          max-height: 150px;
+        }
+        
+        .send-button {
+          min-width: 48px;
+          height: 48px;
+          border-radius: 0;
+          padding: 0;
+          border: none;
+          background-color: #1976d2;
+          color: white;
+          font-weight: 500;
+          cursor: pointer;
+        }
+        
+        .send-button:disabled {
+          background-color: #ccc;
+          cursor: not-allowed;
+        }
+        
+        .progress-bar {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background-color: #e0e0e0;
+          z-index: 100;
+        }
+        
+        .progress-bar-inner {
+          height: 100%;
+          background-color: #1976d2;
+          width: 100%;
+          animation: progressAnimation 2s infinite linear;
+        }
+        
+        @keyframes progressAnimation {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
+    </div>
   );
 };
