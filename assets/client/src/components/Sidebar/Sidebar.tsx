@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import styled from 'styled-components';
 import { useInsight } from '@semoss/sdk-react';
+import { FiX, FiPlus, FiTrash2, FiUpload, FiCheck, FiPaperclip } from 'react-icons/fi';
+import { IoIosOptions } from "react-icons/io";
 
 // Types
 interface Model {
@@ -29,6 +32,7 @@ interface SidebarProps {
   setTemperature: (temperature: number) => void;
   setRefresh: (refresh: boolean) => void;
   setError: (error: string) => void;
+  isOpen: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -49,16 +53,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setTemperature,
   setRefresh,
   setError,
+  isOpen
 }) => {
   const { actions } = useInsight();
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [newVectorName, setNewVectorName] = useState<string>('');
   const [showVectorCreation, setShowVectorCreation] = useState<boolean>(false);
+  const [newVectorName, setNewVectorName] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [documents, setDocuments] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<string>('model');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -124,33 +129,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile.size > 100 * 1024 * 1024) {
-        setFileError('File size exceeds 100MB limit');
-        return;
-      }
-      
-      const fileType = droppedFile.type;
-      if (fileType !== 'application/pdf' && fileType !== 'text/csv') {
-        setFileError('Only PDF and CSV files are supported');
-        return;
-      }
-      
-      setFile(droppedFile);
-      setFileError(null);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
   const createVectorDB = async () => {
     if (!newVectorName.trim()) {
       setError('Vector database name is required');
@@ -167,17 +145,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         throw new Error(output as string);
       }
       
-      // Update vector options after creation
       setRefresh(true);
       setShowVectorCreation(false);
       setNewVectorName('');
       
-      // Find and select the new vector DB
       const newVectorDB = { 
         database_id: (output as string),
         database_name: newVectorName
       };
-
       setSelectedVectorDB(newVectorDB);
       
     } catch (e) {
@@ -225,37 +200,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const toggleSection = (section: string) => {
-    if (expanded === section) {
-      setExpanded(null);
-    } else {
-      setExpanded(section);
-    }
+    setActiveSection(activeSection === section ? '' : section);
   };
 
   return (
-    <div className="sidebar">
-      <div className="sidebar-header">
-        <h3>Settings</h3>
-        <button className="close-button" onClick={() => setSideOpen(false)}>
-          &times;
-        </button>
-      </div>
+    <SettingsSidebar isOpen={isOpen}>
+      <SettingsHeader>
+        <SettingsTitle>Chat Settings</SettingsTitle>
+        <CloseSettingsButton onClick={() => setSideOpen(false)}>
+          <FiX size={20} />
+        </CloseSettingsButton>
+      </SettingsHeader>
       
-      <div className="sidebar-section">
-        <div 
-          className="section-header" 
-          onClick={() => toggleSection('model')}
-        >
-          <h4>Model Selection</h4>
-          <span className={`arrow ${expanded === 'model' ? 'down' : 'right'}`}>▶</span>
-        </div>
+      <SettingsSection>
+        <SettingsSectionTitle onClick={() => toggleSection('model')}>
+          Model Selection
+        </SettingsSectionTitle>
         
-        {expanded === 'model' && (
-          <div className="section-content">
-            <div className="select-container">
-              <label htmlFor="model-select">Model</label>
-              <select 
-                id="model-select"
+        {activeSection === 'model' && (
+          <SettingsItem>
+            <SettingsLabel>Model</SettingsLabel>
+            <SelectWrapper>
+              <StyledSelect
                 value={selectedModel?.database_id || ''}
                 onChange={(e) => {
                   const selected = modelOptions.find(model => model.database_id === e.target.value);
@@ -268,165 +234,151 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {model.database_name}
                   </option>
                 ))}
-              </select>
-            </div>
-          </div>
+              </StyledSelect>
+            </SelectWrapper>
+          </SettingsItem>
         )}
-      </div>
+      </SettingsSection>
       
-      <div className="sidebar-section">
-        <div 
-          className="section-header" 
-          onClick={() => toggleSection('vector')}
-        >
-          <h4>Chat Knowledge</h4>
-          <span className={`arrow ${expanded === 'vector' ? 'down' : 'right'}`}>▶</span>
-        </div>
+      <SettingsSection>
+        <SettingsSectionTitle onClick={() => toggleSection('vector')}>
+          Vector Database
+        </SettingsSectionTitle>
         
-        {expanded === 'vector' && (
-          <div className="section-content">
-            <div className="select-container">
-              <label htmlFor="vector-select">Vector Database</label>
-              <select 
-                id="vector-select"
-                value={selectedVectorDB?.database_id || ''}
-                onChange={(e) => {
-                  if (e.target.value === 'new') {
-                    setShowVectorCreation(true);
-                  } else {
-                    const selected = vectorOptions.find(vector => vector.database_id === e.target.value);
-                    if (selected) setSelectedVectorDB(selected);
-                  }
-                }}
-              >
-                <option value="" disabled>Select vector database</option>
-                {vectorOptions.map(vector => (
-                  <option key={vector.database_id} value={vector.database_id}>
-                    {vector.database_name}
-                  </option>
-                ))}
-                <option value="new">+ Create new</option>
-              </select>
-            </div>
+        {activeSection === 'vector' && (
+          <>
+            <SettingsItem>
+              <SettingsLabelWithButton>
+                <SettingsLabel>Database</SettingsLabel>
+              </SettingsLabelWithButton>
+              <SelectWrapper>
+                <StyledSelect
+                  value={selectedVectorDB?.database_id || ''}
+                  onChange={(e) => {
+                    if (e.target.value === 'new') {
+                      setShowVectorCreation(true);
+                    } else {
+                      const selected = vectorOptions.find(vector => vector.database_id === e.target.value);
+                      if (selected) setSelectedVectorDB(selected);
+                    }
+                  }}
+                >
+                  <option value="" disabled>Select vector database</option>
+                  {vectorOptions.map(vector => (
+                    <option key={vector.database_id} value={vector.database_id}>
+                      {vector.database_name}
+                    </option>
+                  ))}
+                  <option value="new">+ Create new</option>
+                </StyledSelect>
+              </SelectWrapper>
+            </SettingsItem>
             
             {showVectorCreation && (
-              <div className="create-vector-form">
-                <input
-                  type="text"
-                  placeholder="New vector database name"
-                  value={newVectorName}
-                  onChange={(e) => setNewVectorName(e.target.value)}
-                />
-                <div className="button-group">
-                  <button 
-                    className="cancel-button"
-                    onClick={() => setShowVectorCreation(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    className="create-button"
-                    onClick={createVectorDB}
-                    disabled={loading || !newVectorName.trim()}
-                  >
-                    {loading ? 'Creating...' : 'Create'}
-                  </button>
-                </div>
-              </div>
+              <SettingsItem>
+                <ContextEditContainer>
+                  <StyledInput
+                    type="text"
+                    placeholder="New vector database name"
+                    value={newVectorName}
+                    onChange={(e) => setNewVectorName(e.target.value)}
+                  />
+                  <ButtonGroup>
+                    <SecondaryButton onClick={() => setShowVectorCreation(false)}>
+                      Cancel
+                    </SecondaryButton>
+                    <PrimaryButton 
+                      onClick={createVectorDB}
+                      disabled={loading || !newVectorName.trim()}
+                    >
+                      {loading ? 'Creating...' : 'Create'}
+                    </PrimaryButton>
+                  </ButtonGroup>
+                </ContextEditContainer>
+              </SettingsItem>
             )}
             
             {selectedVectorDB?.database_id && (
-              <div className="document-management">
-                <h5>Upload Document</h5>
-                <div 
-                  className="dropzone"
-                  onDrop={handleFileDrop}
-                  onDragOver={handleDragOver}
-                >
-                  <p>Drag & drop file here or</p>
-                  <input
-                    type="file"
-                    id="file-input"
-                    ref={fileInputRef}
-                    accept=".pdf,.csv"
-                    onChange={handleFileChange}
-                    style={{ display: 'none' }}
-                  />
-                  <button 
-                    className="upload-button"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    Select File
-                  </button>
-                </div>
+              <SettingsItem>
+                <SettingsLabelWithButton>
+                  <SettingsLabel>Documents</SettingsLabel>
+                  <SettingsAddButton onClick={() => fileInputRef.current?.click()}>
+                    <FiPlus size={14} />
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      style={{ display: 'none' }}
+                      accept=".pdf,.csv"
+                      onChange={handleFileChange}
+                    />
+                  </SettingsAddButton>
+                </SettingsLabelWithButton>
                 
                 {file && (
-                  <div className="selected-file">
-                    <p>{file.name}</p>
-                    <div className="button-group">
-                      <button 
-                        className="cancel-button"
-                        onClick={() => setFile(null)}
-                      >
-                        Cancel
-                      </button>
-                      <button 
-                        className="upload-button"
-                        onClick={uploadDocument}
-                        disabled={loading}
-                      >
-                        {loading ? 'Uploading...' : 'Upload'}
-                      </button>
-                    </div>
-                  </div>
+                  <SettingsFileItem>
+                    <SettingsFileIcon>📄</SettingsFileIcon>
+                    <SettingsFileDetails>
+                      <SettingsFileName>{file.name}</SettingsFileName>
+                      <SettingsFileInfo>
+                        {(file.size / (1024 * 1024)).toFixed(2)} MB
+                      </SettingsFileInfo>
+                    </SettingsFileDetails>
+                    <ButtonGroup>
+                      <SettingsFileDelete onClick={() => setFile(null)}>
+                        <FiX size={14} />
+                      </SettingsFileDelete>
+                      <SettingsFileUpload onClick={uploadDocument} disabled={loading}>
+                        <FiUpload size={14} />
+                      </SettingsFileUpload>
+                    </ButtonGroup>
+                  </SettingsFileItem>
                 )}
                 
                 {fileError && (
-                  <p className="error-message">{fileError}</p>
+                  <ErrorMessage>{fileError}</ErrorMessage>
                 )}
                 
-                <h5>Documents</h5>
-                {loading ? (
-                  <p>Loading documents...</p>
+                {loading && !file ? (
+                  <LoadingText>Loading documents...</LoadingText>
                 ) : documents.length === 0 ? (
-                  <p>No documents found</p>
+                  <SettingsEmptyState>No documents found</SettingsEmptyState>
                 ) : (
-                  <ul className="document-list">
+                  <SettingsFileList>
                     {documents.map(doc => (
-                      <li key={doc} className="document-item">
-                        <span className="document-name">{doc}</span>
-                        <button 
-                          className="delete-button"
+                      <SettingsFileItem key={doc}>
+                        <SettingsFileIcon>📄</SettingsFileIcon>
+                        <SettingsFileDetails>
+                          <SettingsFileName>{doc}</SettingsFileName>
+                        </SettingsFileDetails>
+                        <SettingsFileDelete 
                           onClick={() => deleteDocument(doc)}
                           disabled={isDeleting === doc}
                         >
-                          {isDeleting === doc ? '...' : '🗑️'}
-                        </button>
-                      </li>
+                          {isDeleting === doc ? 
+                            <LoadingSpinner /> : 
+                            <FiTrash2 size={14} />
+                          }
+                        </SettingsFileDelete>
+                      </SettingsFileItem>
                     ))}
-                  </ul>
+                  </SettingsFileList>
                 )}
-              </div>
+              </SettingsItem>
             )}
-          </div>
+          </>
         )}
-      </div>
+      </SettingsSection>
       
-      <div className="sidebar-section">
-        <div 
-          className="section-header" 
-          onClick={() => toggleSection('storage')}
-        >
-          <h4>Storage</h4>
-          <span className={`arrow ${expanded === 'storage' ? 'down' : 'right'}`}>▶</span>
-        </div>
+      <SettingsSection>
+        <SettingsSectionTitle onClick={() => toggleSection('storage')}>
+          Storage
+        </SettingsSectionTitle>
         
-        {expanded === 'storage' && (
-          <div className="section-content">
-            <div className="select-container">
-              <label htmlFor="storage-select">Storage</label>
-              <select 
-                id="storage-select"
+        {activeSection === 'storage' && (
+          <SettingsItem>
+            <SettingsLabel>Storage</SettingsLabel>
+            <SelectWrapper>
+              <StyledSelect
                 value={selectedStorage?.database_id || ''}
                 onChange={(e) => {
                   const selected = storageOptions.find(storage => storage.database_id === e.target.value);
@@ -439,360 +391,421 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {storage.database_name}
                   </option>
                 ))}
-              </select>
-            </div>
-          </div>
+              </StyledSelect>
+            </SelectWrapper>
+          </SettingsItem>
         )}
-      </div>
+      </SettingsSection>
       
-      <div className="sidebar-section">
-        <div 
-          className="section-header" 
-          onClick={() => toggleSection('settings')}
-        >
-          <h4>Query Settings</h4>
-          <span className={`arrow ${expanded === 'settings' ? 'down' : 'right'}`}>▶</span>
-        </div>
+      <SettingsSection>
+        <SettingsSectionTitle onClick={() => toggleSection('query')}>
+          Query Settings
+        </SettingsSectionTitle>
         
-        {expanded === 'settings' && (
-          <div className="section-content">
-            <div className="slider-container">
-              <label htmlFor="limit-slider">
-                Number of Results Queried: {limit}
-                <div className="tooltip">
-                  <span className="tooltip-icon">?</span>
-                  <span className="tooltip-text">
+        {activeSection === 'query' && (
+          <>
+            <SettingsItem>
+              <SettingsLabel>
+                Number of Results Queried
+                <TooltipWrapper>
+                  <TooltipIcon>?</TooltipIcon>
+                  <TooltipText>
                     This will change the amount of documents pulled from a vector database. 
                     Pulling too many documents can potentially cause your engines token limit to be exceeded!
-                  </span>
-                </div>
-              </label>
-              <input
-                type="range"
-                id="limit-slider"
-                min={1}
-                max={10}
-                step={1}
-                value={limit}
-                onChange={(e) => setLimit(parseInt(e.target.value))}
-              />
-              <div className="slider-markers">
-                {[...Array(10)].map((_, i) => (
-                  <span key={i} className="marker">{i + 1}</span>
-                ))}
-              </div>
-            </div>
+                  </TooltipText>
+                </TooltipWrapper>
+              </SettingsLabel>
+              <SettingsSliderContainer>
+                <SettingsSlider 
+                  type="range" 
+                  min="1" 
+                  max="10" 
+                  step="1"
+                  value={limit}
+                  onChange={(e) => setLimit(parseInt(e.target.value))}
+                />
+                <SettingsSliderValue>{limit}</SettingsSliderValue>
+              </SettingsSliderContainer>
+            </SettingsItem>
             
-            <div className="slider-container">
-              <label htmlFor="temperature-slider">
-                Temperature: {temperature.toFixed(1)}
-                <div className="tooltip">
-                  <span className="tooltip-icon">?</span>
-                  <span className="tooltip-text">
+            <SettingsItem>
+              <SettingsLabel>
+                Temperature
+                <TooltipWrapper>
+                  <TooltipIcon>?</TooltipIcon>
+                  <TooltipText>
                     This changes the randomness of the LLM's output. 
                     The higher the temperature the more creative and imaginative your answer will be.
-                  </span>
-                </div>
-              </label>
-              <input
-                type="range"
-                id="temperature-slider"
-                min={0}
-                max={1}
-                step={0.1}
-                value={temperature}
-                onChange={(e) => setTemperature(parseFloat(e.target.value))}
-              />
-              <div className="slider-markers">
-                {[...Array(11)].map((_, i) => (
-                  <span key={i} className="marker">{(i / 10).toFixed(1)}</span>
-                ))}
-              </div>
-            </div>
-          </div>
+                  </TooltipText>
+                </TooltipWrapper>
+              </SettingsLabel>
+              <SettingsSliderContainer>
+                <SettingsSlider 
+                  type="range" 
+                  min="0" 
+                  max="1" 
+                  step="0.1"
+                  value={temperature}
+                  onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                />
+                <SettingsSliderValue>{temperature.toFixed(1)}</SettingsSliderValue>
+              </SettingsSliderContainer>
+            </SettingsItem>
+          </>
         )}
-      </div>
-      
-      <style>{`
-        .sidebar {
-          display: flex;
-          flex-direction: column;
-          width: 280px;
-          background-color: #ffffff;
-          box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-          padding: 16px;
-          height: 100vh;
-          position: fixed;
-          left: 0;
-          top: 0;
-          z-index: 10;
-          overflow-y: auto;
-        }
-        
-        .sidebar-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding-bottom: 16px;
-          border-bottom: 1px solid #e0e0e0;
-          margin-bottom: 16px;
-        }
-        
-        .close-button {
-          background: none;
-          border: none;
-          font-size: 24px;
-          cursor: pointer;
-          color: #666;
-        }
-        
-        .sidebar-section {
-          margin-bottom: 16px;
-          border: 1px solid #e0e0e0;
-          border-radius: 4px;
-          overflow: hidden;
-        }
-        
-        .section-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 12px 16px;
-          background-color: #f5f5f5;
-          cursor: pointer;
-        }
-        
-        .section-header h4 {
-          margin: 0;
-          font-size: 16px;
-          font-weight: 500;
-        }
-        
-        .arrow {
-          font-size: 12px;
-          transition: transform 0.3s;
-        }
-        
-        .arrow.down {
-          transform: rotate(90deg);
-        }
-        
-        .section-content {
-          padding: 16px;
-          background-color: #fff;
-        }
-        
-        .select-container {
-          margin-bottom: 12px;
-        }
-        
-        .select-container label {
-          display: block;
-          margin-bottom: 6px;
-          font-size: 14px;
-          color: #666;
-        }
-        
-        select {
-          width: 100%;
-          padding: 8px 12px;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          font-size: 14px;
-          background-color: #fff;
-        }
-        
-        .create-vector-form {
-          margin-top: 12px;
-          padding: 12px;
-          background-color: #f9f9f9;
-          border-radius: 4px;
-        }
-        
-        .create-vector-form input {
-          width: 100%;
-          padding: 8px 12px;
-          margin-bottom: 12px;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          font-size: 14px;
-        }
-        
-        .button-group {
-          display: flex;
-          justify-content: flex-end;
-          gap: 8px;
-        }
-        
-        button {
-          padding: 6px 12px;
-          border-radius: 4px;
-          font-size: 14px;
-          cursor: pointer;
-          border: none;
-        }
-        
-        .cancel-button {
-          background-color: #f5f5f5;
-          color: #666;
-        }
-        
-        .create-button, .upload-button {
-          background-color: #1976d2;
-          color: white;
-        }
-        
-        .create-button:disabled, .upload-button:disabled {
-          background-color: #cccccc;
-          cursor: not-allowed;
-        }
-        
-        .dropzone {
-          border: 2px dashed #ccc;
-          border-radius: 4px;
-          padding: 24px;
-          text-align: center;
-          margin-bottom: 16px;
-          cursor: pointer;
-        }
-        
-        .dropzone p {
-          margin: 0 0 12px;
-          color: #666;
-        }
-        
-        .selected-file {
-          margin-bottom: 16px;
-          padding: 12px;
-          background-color: #f5f5f5;
-          border-radius: 4px;
-        }
-        
-        .selected-file p {
-          margin: 0 0 8px;
-          font-size: 14px;
-          word-break: break-word;
-        }
-        
-        .error-message {
-          color: #d32f2f;
-          font-size: 14px;
-          margin: 8px 0;
-        }
-        
-        .document-list {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-          max-height: 200px;
-          overflow-y: auto;
-          border: 1px solid #e0e0e0;
-          border-radius: 4px;
-        }
-        
-        .document-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 8px 12px;
-          border-bottom: 1px solid #e0e0e0;
-        }
-        
-        .document-item:last-child {
-          border-bottom: none;
-        }
-        
-        .document-name {
-          font-size: 14px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 80%;
-        }
-        
-        .delete-button {
-          background: none;
-          border: none;
-          color: #d32f2f;
-          cursor: pointer;
-          padding: 4px;
-        }
-        
-        .delete-button:disabled {
-          color: #cccccc;
-          cursor: not-allowed;
-        }
-        
-        .slider-container {
-          margin-bottom: 20px;
-        }
-        
-        .slider-container label {
-          display: flex;
-          align-items: center;
-          margin-bottom: 8px;
-          font-size: 14px;
-          color: #666;
-        }
-        
-        input[type="range"] {
-          width: 100%;
-          margin-bottom: 4px;
-        }
-        
-        .slider-markers {
-          display: flex;
-          justify-content: space-between;
-          font-size: 12px;
-          color: #999;
-          padding: 0 2px;
-        }
-        
-        .tooltip {
-          position: relative;
-          display: inline-block;
-          margin-left: 6px;
-        }
-        
-        .tooltip-icon {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          background-color: #ccc;
-          color: #fff;
-          font-size: 12px;
-          cursor: help;
-        }
-        
-        .tooltip-text {
-          visibility: hidden;
-          width: 200px;
-          background-color: #333;
-          color: #fff;
-          text-align: center;
-          border-radius: 4px;
-          padding: 8px;
-          position: absolute;
-          z-index: 1;
-          bottom: 125%;
-          left: 50%;
-          transform: translateX(-50%);
-          opacity: 0;
-          transition: opacity 0.3s;
-          font-size: 12px;
-          line-height: 1.4;
-        }
-        
-        .tooltip:hover .tooltip-text {
-          visibility: visible;
-          opacity: 1;
-        }
-      `}</style>
-    </div>
+      </SettingsSection>
+    </SettingsSidebar>
   );
 };
 
-export default Sidebar;
+// Styled components
+const SettingsSidebar = styled.div<{ isOpen: boolean }>`
+  position: fixed;
+  top: 0;
+  right: ${props => props.isOpen ? '0' : '-400px'};
+  width: 350px;
+  height: 100vh;
+  background: white;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  overflow-y: auto;
+  transition: right 0.3s ease-in-out;
+  z-index: 1000;
+`;
+
+const SettingsHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+`;
+
+const SettingsTitle = styled.h2`
+  margin: 0;
+  font-size: 1.2rem;
+`;
+
+const CloseSettingsButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #777;
+  
+  &:hover {
+    color: #333;
+  }
+`;
+
+const SettingsSection = styled.div`
+  margin-bottom: 15px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  overflow: hidden;
+`;
+
+const SettingsSectionTitle = styled.h3`
+  font-size: 1rem;
+  margin: 0;
+  padding: 12px 15px;
+  background-color: #f5f5f5;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: #eee;
+  }
+`;
+
+const SettingsItem = styled.div`
+  padding: 15px;
+  border-top: 1px solid #eee;
+`;
+
+const SettingsLabel = styled.div`
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+`;
+
+const SettingsLabelWithButton = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+`;
+
+const SettingsAddButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4a90e2;
+  
+  &:hover {
+    color: #3a80d2;
+  }
+`;
+
+const SelectWrapper = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const StyledSelect = styled.select`
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 0.9rem;
+  appearance: none;
+  
+  &:focus {
+    outline: none;
+    border-color: #4a90e2;
+  }
+`;
+
+const StyledInput = styled.input`
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+  
+  &:focus {
+    outline: none;
+    border-color: #4a90e2;
+  }
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+`;
+
+const SecondaryButton = styled.button`
+  padding: 6px 12px;
+  background-color: #f5f5f5;
+  color: #666;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  
+  &:hover {
+    background-color: #e5e5e5;
+  }
+`;
+
+const PrimaryButton = styled.button<{ disabled?: boolean }>`
+  padding: 6px 12px;
+  background-color: ${props => props.disabled ? '#ccc' : '#4a90e2'};
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: ${props => props.disabled ? 'default' : 'pointer'};
+  font-size: 0.85rem;
+  
+  &:hover {
+    background-color: ${props => props.disabled ? '#ccc' : '#3a80d2'};
+  }
+`;
+
+const ContextEditContainer = styled.div`
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 12px;
+  background-color: #f9f9f9;
+`;
+
+const TooltipWrapper = styled.div`
+  position: relative;
+  display: inline-block;
+  margin-left: 6px;
+`;
+
+const TooltipIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #ccc;
+  color: #fff;
+  font-size: 12px;
+  cursor: help;
+`;
+
+const TooltipText = styled.span`
+  visibility: hidden;
+  width: 200px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 4px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: normal;
+  
+  ${TooltipWrapper}:hover & {
+    visibility: visible;
+    opacity: 1;
+  }
+`;
+
+const SettingsSliderContainer = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+const SettingsSlider = styled.input`
+  flex: 1;
+  margin-right: 10px;
+  -webkit-appearance: none;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+  
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #4a90e2;
+    cursor: pointer;
+  }
+`;
+
+const SettingsSliderValue = styled.div`
+  width: 30px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+`;
+
+const SettingsFileList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 10px;
+`;
+
+const SettingsFileItem = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+`;
+
+const SettingsFileIcon = styled.div`
+  font-size: 1.2rem;
+  margin-right: 10px;
+`;
+
+const SettingsFileDetails = styled.div`
+  flex: 1;
+  overflow: hidden;
+`;
+
+const SettingsFileName = styled.div`
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const SettingsFileInfo = styled.div`
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 2px;
+`;
+
+const SettingsFileDelete = styled.button<{ disabled?: boolean }>`
+  background: none;
+  border: none;
+  cursor: ${props => props.disabled ? 'default' : 'pointer'};
+  color: ${props => props.disabled ? '#ccc' : '#e53935'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  
+  &:hover {
+    color: ${props => props.disabled ? '#ccc' : '#c62828'};
+  }
+`;
+
+const SettingsFileUpload = styled.button<{ disabled?: boolean }>`
+  background: none;
+  border: none;
+  cursor: ${props => props.disabled ? 'default' : 'pointer'};
+  color: ${props => props.disabled ? '#ccc' : '#4a90e2'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  
+  &:hover {
+    color: ${props => props.disabled ? '#ccc' : '#3a80d2'};
+  }
+`;
+
+const SettingsEmptyState = styled.div`
+  font-size: 0.85rem;
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  margin-top: 10px;
+`;
+
+const ErrorMessage = styled.div`
+  color: #e53935;
+  font-size: 0.85rem;
+  margin-top: 8px;
+`;
+
+const LoadingText = styled.div`
+  font-size: 0.85rem;
+  color: #666;
+  text-align: center;
+  margin-top: 10px;
+`;
+
+const LoadingSpinner = styled.div`
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-top-color: #4a90e2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;

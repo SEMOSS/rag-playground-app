@@ -76,7 +76,7 @@ export const MainLayout = () => {
                 <StyledContent>
                     <Outlet />
                 </StyledContent>
-                <StyledDisclaimer>
+                {/* <StyledDisclaimer>
                     <Alert severity={'info'}>
                         <Typography
                             variant={'caption'}
@@ -98,7 +98,7 @@ export const MainLayout = () => {
                         <span>Powered By</span>
                         <img src={LOGO_POWERED} />
                     </StyledFooterLogo>
-                </StyledFooter>
+                </StyledFooter> */}
             </StyledMain>
         </StyledWrapper>
     );
