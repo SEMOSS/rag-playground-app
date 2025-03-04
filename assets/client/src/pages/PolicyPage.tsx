@@ -329,7 +329,7 @@ export const PolicyPage = () => {
               <EmptyChat>
                 <EmptyChatTitle>Start a conversation</EmptyChatTitle>
                 <EmptyChatText>
-                  Ask a question about company policies, procedures, or systems.
+                  Great for asking question about complex policies, procedures, or systems.
                 </EmptyChatText>
               </EmptyChat>
               <ExampleGrid>
