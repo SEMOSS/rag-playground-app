@@ -9,12 +9,14 @@ const StyledWrapper = styled('div')(() => ({
     height: '100%',
     width: '100%',
     overflow: 'auto',
+    background: 'rgb(36,42,100)',
 }));
 
 const StyledMain = styled('div')(() => ({
     position: 'relative',
     flex: 1,
     overflow: 'auto',
+    background: 'linear-gradient(160deg, rgb(88,40,47) 0%, rgb(36,42,100) 100%)',
 }));
 
 const StyledContent = styled('div')(({ theme }) => ({

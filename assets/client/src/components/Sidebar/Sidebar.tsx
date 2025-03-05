@@ -484,7 +484,8 @@ const SettingsHeader = styled.div`
 
 const SettingsTitle = styled.h2`
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  font-color: rgb(36, 42, 100);
 `;
 
 const CloseSettingsButton = styled.button`
@@ -494,16 +495,16 @@ const CloseSettingsButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #777;
+  color: #242a64;
   
   &:hover {
-    color: #333;
+    color: rgb(36, 42, 100, .7);
   }
 `;
 
 const SettingsSection = styled.div`
   margin-bottom: 15px;
-  border: 1px solid #eee;
+  border: 1px solid rgb(36, 42, 100);
   border-radius: 6px;
   overflow: hidden;
 `;
@@ -512,11 +513,12 @@ const SettingsSectionTitle = styled.h3`
   font-size: 1rem;
   margin: 0;
   padding: 12px 15px;
-  background-color: #f5f5f5;
+  background-color: #242a64;
   cursor: pointer;
+  color: white;
   
   &:hover {
-    background-color: #eee;
+    background-color: rgb(36, 42, 100, .9);
   }
 `;
 
@@ -547,10 +549,10 @@ const SettingsAddButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4a90e2;
+  color: rgb(36, 42, 100);
   
   &:hover {
-    color: #3a80d2;
+    color: rgb(36, 42, 100, .7);
   }
 `;
 
@@ -562,7 +564,7 @@ const SelectWrapper = styled.div`
 const StyledSelect = styled.select`
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid rgb(36, 42, 100);
   border-radius: 4px;
   background-color: white;
   font-size: 0.9rem;
@@ -570,21 +572,22 @@ const StyledSelect = styled.select`
   
   &:focus {
     outline: none;
-    border-color: #4a90e2;
+    border-color: rgb(36, 42, 10, 0.7);
   }
 `;
 
 const StyledInput = styled.input`
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid rgb(36, 42, 100);
   border-radius: 4px;
   font-size: 0.9rem;
   margin-bottom: 10px;
   
   &:focus {
     outline: none;
-    border-color: #4a90e2;
+    border-color: rgb(36, 42, 100, 0.7);
+    background-color: rgb(36, 42, 100);
   }
 `;
 
@@ -610,7 +613,7 @@ const SecondaryButton = styled.button`
 
 const PrimaryButton = styled.button<{ disabled?: boolean }>`
   padding: 6px 12px;
-  background-color: ${props => props.disabled ? '#ccc' : '#4a90e2'};
+  background-color: ${props => props.disabled ? '#ccc' : 'rgb(36, 42, 100)'};
   color: white;
   border: none;
   border-radius: 4px;
@@ -691,7 +694,7 @@ const SettingsSlider = styled.input`
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: #4a90e2;
+    background: rgb(36, 42, 100);
     cursor: pointer;
   }
 `;
@@ -763,7 +766,7 @@ const SettingsFileUpload = styled.button<{ disabled?: boolean }>`
   background: none;
   border: none;
   cursor: ${props => props.disabled ? 'default' : 'pointer'};
-  color: ${props => props.disabled ? '#ccc' : '#4a90e2'};
+  color: ${props => props.disabled ? '#ccc' : 'rgb(36, 42, 100)'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -799,7 +802,7 @@ const LoadingSpinner = styled.div`
   width: 14px;
   height: 14px;
   border: 2px solid rgba(0, 0, 0, 0.1);
-  border-top-color: #4a90e2;
+  border-top-color: rgb(36, 42, 100);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   

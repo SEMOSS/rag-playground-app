@@ -185,6 +185,8 @@ export const PolicyPage = () => {
         setUrls(temp_urls.map((url, i) => ({ ID: i, link: url })));
       }
 
+      const escapedQuestion = questionText.replace(/"/g, '\\"');
+
       // Convert context docs to string representation -> pixel cmd
       const contextDocsString = context_docs.length > 0 
         ? JSON.stringify(context_docs).slice(1, -1) 
@@ -195,7 +197,7 @@ export const PolicyPage = () => {
         ? "You are an intelligent AI designed to answer queries based on policy documents."
         : "You are an intelligent AI assistant. Answer the following question to the best of your ability.";
       
-      const pixel = `LLM(engine="${selectedModel.database_id}", command="${questionText}", paramValues=[{"full_prompt":[{"role": "system", "content": "${systemMessage} ${questionText}."}, ${contextDocsString}]}, {"temperature":${temperature}}])`;
+      const pixel = `LLM(engine="${selectedModel.database_id}", command="${escapedQuestion}", paramValues=[{"full_prompt":[{"role": "system", "content": "${systemMessage} ${escapedQuestion}."}, ${contextDocsString}]}, {"temperature":${temperature}}])`;
       
       const LLMresponse = await actions.run(pixel);
       const { output: LLMOutput, operationType: LLMOperationType } = LLMresponse.pixelReturn[0];
@@ -532,7 +534,8 @@ const Container = styled.div`
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background-color: #f5f5f5;
+  // background-color: #f5f5f5;
+  background-color: linear-gradient(135deg, rgb(88,40,47) )%, rgb(36,42,100) 100%);
 `;
 
 const ChatContainer = styled.div`
@@ -564,56 +567,59 @@ const HeaderControls = styled.div`
 
 const Title = styled.h1`
   margin: 0;
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: rgb(36,42,100);
 `;
 
 const ModelLabel = styled.div`
   display: flex;
   align-items: center;
-  background: #f5f5f5;
+  background: rgb(36,42,100);
+  color: white;
   border: none;
   padding: 6px 12px;
   border-radius: 6px;
   margin-right: 10px;
-  font-size: 0.85rem;
+  font-size: 1rem;
 `;
 
 const ModelIcon = styled.div`
-  background: #e0e0e0;
-  color: #666;
-  width: 20px;
-  height: 20px;
+  background: #090e3c;
+  color: white;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: 1rem;
   font-weight: bold;
   margin-right: 8px;
 `;
 
 const SettingsButton = styled.button`
-  background: #f5f5f5;
+  background: rgb(36,42,100);
   border: none;
-  width: 36px;
-  height: 36px;
+  width: 45px;
+  height: 45px;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  color: white;
   
   &:hover {
-    background: #e9e9e9;
+    background: rgb(36, 42, 100, .9);
   }
 `;
 
 const ErrorAlert = styled.div`
   margin: 15px;
   padding: 10px 15px;
-  background-color: #ffebee;
-  color: #c62828;
+  background-color: #d7a6ab;
+  color: #58282F;
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -623,7 +629,7 @@ const ErrorAlert = styled.div`
 const CloseErrorButton = styled.button`
   background: none;
   border: none;
-  color: #c62828;
+  color: #58282F;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -659,7 +665,7 @@ const MessageBubble = styled.div<{ isUser: boolean }>`
   max-width: 70%;
   padding: 12px 16px;
   border-radius: ${props => props.isUser ? '18px 18px 0 18px' : '18px 18px 18px 0'};
-  background-color: ${props => props.isUser ? '#4a90e2' : '#f5f5f5'};
+  background-color: ${props => props.isUser ? '#242a64' : '#f5f5f5'};
   color: ${props => props.isUser ? 'white' : 'inherit'};
   position: relative;
 `;
@@ -761,21 +767,21 @@ const FileButton = styled.button`
   align-items: center;
   
   &:hover {
-    color: #4a90e2;
+    color: rgb(36, 42, 100);
   }
 `;
 
 const SendButton = styled.button<{ disabled?: boolean }>`
   background: none;
   border: none;
-  color: ${props => props.disabled ? '#ccc' : '#4a90e2'};
+  color: ${props => props.disabled ? '#ccc' : '#242a64'};
   cursor: ${props => props.disabled ? 'default' : 'pointer'};
   padding: 12px 8px;
   display: flex;
   align-items: center;
   
   &:hover {
-    color: ${props => props.disabled ? '#ccc' : '#3a80d2'};
+    color: ${props => props.disabled ? '#ccc' : 'rgb(36, 42, 100, .7)'};
   }
 `;
 
@@ -807,7 +813,7 @@ const AttachmentName = styled.div`
 const RemoveAttachmentButton = styled.button`
   background: none;
   border: none;
-  color: #777;
+  color: #58282F;
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -890,7 +896,7 @@ const ProgressBar = styled.div`
     position: absolute;
     height: 100%;
     width: 50%;
-    background-color: #4a90e2;
+    background-color: #242a64;
     animation: progress 1.5s infinite ease-in-out;
   }
   
