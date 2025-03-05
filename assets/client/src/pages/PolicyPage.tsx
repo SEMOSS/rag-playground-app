@@ -185,7 +185,7 @@ export const PolicyPage = () => {
         setUrls(temp_urls.map((url, i) => ({ ID: i, link: url })));
       }
 
-      const escapedQuestion = questionText.replace(/"/g, '\\"');
+      // const escapedQuestion = questionText.replace(/"/g, '\\"');
 
       // Convert context docs to string representation -> pixel cmd
       const contextDocsString = context_docs.length > 0 
@@ -197,7 +197,19 @@ export const PolicyPage = () => {
         ? "You are an intelligent AI designed to answer queries based on policy documents."
         : "You are an intelligent AI assistant. Answer the following question to the best of your ability.";
       
-      const pixel = `LLM(engine="${selectedModel.database_id}", command="${escapedQuestion}", paramValues=[{"full_prompt":[{"role": "system", "content": "${systemMessage} ${escapedQuestion}."}, ${contextDocsString}]}, {"temperature":${temperature}}])`;
+
+        const pixel = `LLM(engine=["${selectedModel.database_id}"],
+                    ${
+                        contextDocsString
+                            ? `context=["<encode>${contextDocsString}</encode>"],`
+                            : ''
+                    } command=["<encode>${questionText}</encode>"], paramValues=[${JSON.stringify(
+                    {
+                      "temperature": temperature
+                    },
+                )}]);`
+
+      // const pixel = `LLM(engine="${selectedModel.database_id}", command="${questionText}", paramValues=[{"full_prompt":[{"role": "system", "content": "${systemMessage} ${questionText}."}, ${contextDocsString}]}, {"temperature":${temperature}}])`;
       
       const LLMresponse = await actions.run(pixel);
       const { output: LLMOutput, operationType: LLMOperationType } = LLMresponse.pixelReturn[0];
