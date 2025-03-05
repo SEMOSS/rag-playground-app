@@ -21,6 +21,7 @@
         "@semoss/sdk": "^1.0.0-beta.14",
         "@semoss/sdk-react": "^1.0.0-beta.15",
         "axios": "^0.24.0",
+        "dayjs": "^1.11.4",
         "dompurify": "^3.0.5",
         "history": "^5.3.0",
         "markdown-to-jsx": "^7.2.1",

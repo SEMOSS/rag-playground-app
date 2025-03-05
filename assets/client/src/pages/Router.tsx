@@ -14,6 +14,7 @@ import { MainLayout } from './MainLayout';
 import { AuthenticatedLayout } from './AuthenticatedLayout';
 //import { LoginPage } from './LoginPage';
 import { PolicyPage } from './PolicyPage';
+import { LandingPage } from './LandingPage';
 
 const StyledContainer = styled('div')(() => ({
     display: 'flex',
@@ -60,7 +61,18 @@ export const Router = () => {
                 <Route element={<MainLayout />}>
                     <Route element={<AuthenticatedLayout />}>
                         <Route path="/" element={<Outlet />}>
-                            <Route index element={<PolicyPage />} />
+                            <Route index element={<LandingPage />} />
+                            {/* <Route path=":id">
+                                <Route
+                                    index
+                                    element={<FormRenderer preview={true} />}
+                                />
+                                <Route
+                                    path="edit"
+                                    element={<FormRenderer preview={false} />}
+                                />
+                            </Route> */}
+                            <Route path="policy" element={<PolicyPage />} />
                             <Route
                                 path="*"
                                 element={<Navigate to="/" replace />}
@@ -74,6 +86,29 @@ export const Router = () => {
                     />
                 </Route>
             </Routes>
+            {/* <Routes>
+                <Route element={<MainLayout />}>
+                    <Route path="/" element={<FormLayout />}>
+                        <Route index element={<Landing />} />
+
+                        <Route path=":id">
+                            <Route
+                                index
+                                element={<FormRenderer preview={true} />}
+                            />
+                            <Route
+                                path="edit"
+                                element={<FormRenderer preview={false} />}
+                            />
+                        </Route>
+                        <Route path="manage" element={<Management />} />
+
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Route>
+                </Route>
+                <Route path="/login" element={<LoginPage />}></Route>
+                <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes> */}
         </ReactRouter>
     );
 };

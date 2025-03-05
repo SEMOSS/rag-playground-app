@@ -57,15 +57,36 @@ export interface CustomThemeOptions extends ThemeOptions {
 export const lightTheme: CustomThemeOptions = {
     palette: {
         mode: 'light',
+        // primary: {
+        //     main: '#1a3e72', // Navy color suitable for Defense Health Agency
+        //     light: '#476d9d',
+        //     dark: '#0e274a',
+        //     contrastText: '#ffffff',
+        // },
+        // secondary: {
+        //     main: '#00bfa5', // Contrast or adjunct color
+        //     light: '#33d4b7',
+        //     dark: '#008575',
+        //     contrastText: '#ffffff',
+        // },
         primary: {
-            main: '#0471F0',
-            light: '#22A4FF',
-            dark: '#1260DD',
+            main: '#283446', // Navy color suitable for Defense Health Agency
+            light: '#6c82a7',
+            dark: '#3d4d69',
+            contrastText: '#ffffff',
         },
         secondary: {
-            main: '#D9D9D9',
-            light: '#F2F2F2',
-            dark: '#B5B5B5',
+            main: '#bfc6d4', // Contrast or adjunct color
+            light: '#780000',
+            dark: '#008575',
+            contrastText: '#780000',
+        },
+        background: {
+            default: '#f8fafc', // Light grey for page backgrounds
+        },
+        text: {
+            primary: '#1a3e72', // Consistent with the primary color for text
+            secondary: '#5f6368', // Lighter text for secondary information
         },
         error: {
             main: '#da291c',
@@ -87,10 +108,10 @@ export const lightTheme: CustomThemeOptions = {
             light: '#4CAF50',
             dark: '#006500',
         },
-        background: {
-            default: '#FAFAFA',
-            paper: '#FFF',
-        },
+        // background: {
+        //     default: '#FAFAFA',
+        //     paper: '#FFF',
+        // },
         semossBlue: {
             '50': '#E2F2FF',
             '100': 'BADEFF',
