@@ -79,6 +79,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       try {
         setLoading(true);
         const pixel = `ListDocumentsInVectorDatabase(engine="${selectedVectorDB.database_id}");`;
+
+        console.log("FETCH PIXEL:", pixel);
+
         const response = await actions.run(pixel);
         const documentsList = response.pixelReturn[0].output;
         
@@ -138,21 +141,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setLoading(true);
     try {
       const pixel = `CreateVectorDatabaseEngine(database=["${newVectorName}"], conDetails=[{"NAME":"${newVectorName}","VECTOR_TYPE":"FAISS","EMBEDDER_ENGINE_ID":"e4449559-bcff-4941-ae72-0e3f18e06660","INDEX_CLASSES":"default","CHUNKING_STRATEGY":"ALL","CONTENT_LENGTH":512,"CONTENT_OVERLAP":20,"DISTANCE_METHOD":"Squared Euclidean (L2) distance","RETAIN_EXTRACTED_TEXT":"false"}]);`;
+
+
+
       const response = await actions.run(pixel);
-      const { output, operationType } = response.pixelReturn[0];
       
+      const { output, operationType } = response.pixelReturn[0];
+
+      if(Array.isArray(output)) {
+        console.log("ITS AN ARRAY :)");
+      } else {
+        console.log("NOPE IT's NOT");
+      }
+
+      console.log("CREATE NEW PIXEL OUTPUT as model", (output as Model).database_id);
+
       if (operationType.indexOf('ERROR') > -1) {
         throw new Error(output as string);
       }
       
-      setRefresh(true);
-      setShowVectorCreation(false);
+      setRefresh(false);
+      setShowVectorCreation(true);
       setNewVectorName('');
       
       const newVectorDB = { 
-        database_id: (output as string),
+        database_id: (output as Model).database_id,
         database_name: newVectorName
       };
+
+      console.log("New vector DB", newVectorDB);
       setSelectedVectorDB(newVectorDB);
       
     } catch (e) {
@@ -587,7 +604,6 @@ const StyledInput = styled.input`
   &:focus {
     outline: none;
     border-color: rgb(36, 42, 100, 0.7);
-    background-color: rgb(36, 42, 100);
   }
 `;
 

@@ -70,7 +70,7 @@ export const Router = () => {
                     {/* <Route path="/login" element={<LoginPage />}></Route> */}
                     <Route
                         path="*"
-                        element={<Navigate to="/login" replace />}
+                        // element={<Navigate to="/login" replace />}
                     />
                 </Route>
             </Routes>
