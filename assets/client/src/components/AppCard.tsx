@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import type { App } from '../lib/types';
 import { Env } from '@semoss/sdk';
-import { AccessTime } from '@mui/icons-material';
+import { AccessTime, WebAssetOutlined } from '@mui/icons-material';
 import dayjs from 'dayjs';
 
 interface AppCardProps {
@@ -54,6 +54,7 @@ const StyledCardDescription = styled(Typography)(({ theme }) => ({
 }));
 
 export default function AppCard({ app }: AppCardProps) {
+    const AppIcon = app.icon || WebAssetOutlined;
     return (
         <Card
             sx={{
@@ -69,7 +70,33 @@ export default function AppCard({ app }: AppCardProps) {
             }}
         >
             <CardHeader
-                sx={{ backgroundColor: 'primary.light', pb: 1 }}
+                sx={{
+                    backgroundColor: 'primary.light',
+                    pb: 1,
+                    alignItems: 'flex-start',
+                }}
+                avatar={
+                    <Avatar
+                        sx={{
+                            backgroundColor: 'primary.main',
+                            // color: 'secondary.contrastText',
+                        }}
+                    >
+                        <AppIcon />
+                    </Avatar>
+                }
+                // action={
+                //     <MuiBadge
+                //         color="secondary"
+                //         sx={{
+                //             backgroundColor: 'white',
+                //             color: 'primary.main',
+                //             fontSize: '0.75rem',
+                //         }}
+                //     >
+                //         {app.project_type}
+                //     </MuiBadge>
+                // }
                 title={
                     <Typography
                         variant="h6"
@@ -93,6 +120,7 @@ export default function AppCard({ app }: AppCardProps) {
                     variant="contained"
                     color="primary"
                     fullWidth
+                    disabled={app.project_type === 'disabled'}
                     href={`#/SemossWeb/packages/client/dist/#/s/${
                         app.project_id
                     }${app.url ? app.url : ''}`}

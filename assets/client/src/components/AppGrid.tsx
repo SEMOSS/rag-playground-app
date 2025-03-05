@@ -15,6 +15,16 @@ import AppCard from '../components/AppCard';
 import AddAppDialog from '../components/AddAppDialog';
 import type { App } from '../lib/types';
 import { useInsight } from '@semoss/sdk-react';
+import {
+    ChecklistOutlined,
+    EmojiEventsOutlined,
+    GroupAddOutlined,
+    InsertChartOutlined,
+    LibraryBooksOutlined,
+    NotesOutlined,
+    WebAssetOff,
+    WebAssetOutlined,
+} from '@mui/icons-material';
 
 export default function AppGrid() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -22,77 +32,113 @@ export default function AppGrid() {
     const { actions } = useInsight();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+    // Onboarding Portal:"Streamline the onboarding process for new team members."
+    // Report Generator:"Quickly create and share custom reports."
+    // RAG Playground:"Chat with documents."
+    // Action Item Tracker:"Record and track completion of action items over time."
+    // Meeting Minute Aide:"Create and organize meeting minutes."
+    // Resource Library:"Access project resources in a central location."
+    // Award Nominator:"Create and manage award nominations."
+    // 1. **Onboarding Portal:** "Streamline the onboarding process for new team members."
+    //     - *Icon Suggestion:* `GroupAddOutlined`
+    //     - This icon visually suggests the addition of new members, aligning well with the onboarding theme.
+
+    // 2. **Report Generator:** "Quickly create and share custom reports."
+    //     - *Icon Suggestion:* `InsertChartOutlined`
+    //     - This icon represents charts or reports, which is ideal for a reporting tool.
+
+    // 3. **RAG Playground:** "Chat with documents."
+    //     - *Icon Suggestion:* `ChatBubbleOutline`
+    //     - The chat bubble icon denotes communication, ideal for a document chat interface.
+
+    // 4. **Action Item Tracker:** "Record and track completion of action items over time."
+    //     - *Icon Suggestion:* `ChecklistOutlined` or `AssignmentTurnedInOutlined`
+    //     - Both icons are suitable for tracking tasks and reflecting task completion.
+
+    // 5. **Meeting Minute Aide:** "Create and organize meeting minutes."
+    //     - *Icon Suggestion:* `NotesOutlined`
+    //     - This icon is perfect for note-taking and organizing, making it fitting for meeting minutes.
+
+    // 6. **Resource Library:** "Access project resources in a central location."
+    //     - *Icon Suggestion:* `LibraryBooksOutlined`
+    //     - The library books icon directly relates to accessing documents or resources.
+
+    // 7. **Award Nominator:** "Create and manage award nominations."
+    //     - *Icon Suggestion:* `EmojiEventsOutlined`
+    //     - This icon depicts a trophy or award, suitable for an application focused on nominations.
+
     // Default apps that will always be shown
     const defaultApps: App[] = [
-        {
-            project_id: '1',
-            project_name: 'Electronic Health Record',
-            project_description: 'Access and manage patient health records',
-            icon: 'file-text',
-            url: '#',
-            project_type: 'Clinical',
-            low_project_name: '',
-            permission: 0,
-            project_cost: '',
-            project_created_by: '',
-            project_created_by_type: '',
-            project_date_created: 'March 4, 2025',
-            project_discoverable: false,
-            project_favorite: 0,
-            project_global: false,
-            project_has_portal: false,
-            project_portal_name: '',
-            user_permission: 0,
-        },
-        {
-            project_id: '2',
-            project_name: 'Medical Logistics',
-            project_description:
-                'Track and manage medical supplies and equipment',
-            icon: 'package',
-            url: '#',
-            project_type: 'Logistics',
-            low_project_name: '',
-            permission: 0,
-            project_cost: '',
-            project_created_by: '',
-            project_created_by_type: '',
-            project_date_created: 'March 4, 2025',
-            project_discoverable: false,
-            project_favorite: 0,
-            project_global: false,
-            project_has_portal: false,
-            project_portal_name: '',
-            user_permission: 0,
-        },
-        {
-            project_id: '3',
-            project_name: 'Personnel Management',
-            project_description:
-                'Manage military and civilian personnel records',
-            icon: 'users',
-            url: '#',
-            project_type: 'Administration',
-            low_project_name: '',
-            permission: 0,
-            project_cost: '',
-            project_created_by: '',
-            project_created_by_type: '',
-            project_date_created: 'March 4, 2025',
-            project_discoverable: false,
-            project_favorite: 0,
-            project_global: false,
-            project_has_portal: false,
-            project_portal_name: '',
-            user_permission: 0,
-        },
+        // {
+        //     project_id: '1',
+        //     project_name: 'Onboarding Portal',
+        //     project_description:
+        //         'Streamline the onboarding process for new team members.',
+        //     icon: GroupAddOutlined,
+        //     url: '#',
+        //     project_type: 'disabled',
+        //     low_project_name: '',
+        //     permission: 0,
+        //     project_cost: '',
+        //     project_created_by: '',
+        //     project_created_by_type: '',
+        //     project_date_created: 'March 4, 2025',
+        //     project_discoverable: false,
+        //     project_favorite: 0,
+        //     project_global: false,
+        //     project_has_portal: false,
+        //     project_portal_name: '',
+        //     user_permission: 0,
+        // },
+        // {
+        //     project_id: '2',
+        //     project_name: 'Report Generator',
+        //     project_description: 'Quickly create and share custom reports.',
+        //     icon: InsertChartOutlined,
+        //     url: '#',
+        //     project_type: 'Logistics',
+        //     low_project_name: '',
+        //     permission: 0,
+        //     project_cost: '',
+        //     project_created_by: '',
+        //     project_created_by_type: '',
+        //     project_date_created: 'March 4, 2025',
+        //     project_discoverable: false,
+        //     project_favorite: 0,
+        //     project_global: false,
+        //     project_has_portal: false,
+        //     project_portal_name: '',
+        //     user_permission: 0,
+        // },
+        // {
+        //     project_id: '3',
+        //     project_name: 'Personnel Management',
+        //     project_description:
+        //         'Manage military and civilian personnel records',
+        //     icon: 'users',
+        //     url: '#',
+        //     project_type: 'Administration',
+        //     low_project_name: '',
+        //     permission: 0,
+        //     project_cost: '',
+        //     project_created_by: '',
+        //     project_created_by_type: '',
+        //     project_date_created: 'March 4, 2025',
+        //     project_discoverable: false,
+        //     project_favorite: 0,
+        //     project_global: false,
+        //     project_has_portal: false,
+        //     project_portal_name: '',
+        //     user_permission: 0,
+        // },
         {
             project_id: '4',
-            project_name: 'Pharmacy System',
-            project_description: 'Prescription management and tracking',
-            icon: 'pill',
+            project_name: 'Action Item Tracker',
+            project_description:
+                'Record and track completion of action items over time.',
+            icon: ChecklistOutlined,
             url: '#',
-            project_type: 'Clinical',
+            project_type: 'disabled',
             low_project_name: '',
             permission: 0,
             project_cost: '',
@@ -108,11 +154,11 @@ export default function AppGrid() {
         },
         {
             project_id: '5',
-            project_name: 'Appointment Scheduler',
-            project_description: 'Schedule and manage patient appointments',
-            icon: 'calendar',
+            project_name: 'Meeting Minute Aid',
+            project_description: 'Create and organize meeting minutes.',
+            icon: NotesOutlined,
             url: '#',
-            project_type: 'Clinical',
+            project_type: 'disabled',
             low_project_name: '',
             permission: 0,
             project_cost: '',
@@ -128,11 +174,12 @@ export default function AppGrid() {
         },
         {
             project_id: '6',
-            project_name: 'Budget Tracker',
-            project_description: 'Track and manage departmental budgets',
-            icon: 'dollar-sign',
+            project_name: 'Resource Library',
+            project_description:
+                'Access project resources in a central location.',
+            icon: LibraryBooksOutlined,
             url: '#',
-            project_type: 'Administration',
+            project_type: 'disabled',
             low_project_name: '',
             permission: 0,
             project_cost: '',
@@ -148,32 +195,11 @@ export default function AppGrid() {
         },
         {
             project_id: '7',
-            project_name: 'Training Portal',
-            project_description:
-                'Access required training and education resources',
-            icon: 'graduation-cap',
+            project_name: 'Award Nominator',
+            project_description: 'Create and manage award nominations.',
+            icon: EmojiEventsOutlined,
             url: '#',
-            project_type: 'Education',
-            low_project_name: '',
-            permission: 0,
-            project_cost: '',
-            project_created_by: '',
-            project_created_by_type: '',
-            project_date_created: 'March 4, 2025',
-            project_discoverable: false,
-            project_favorite: 0,
-            project_global: false,
-            project_has_portal: false,
-            project_portal_name: '',
-            user_permission: 0,
-        },
-        {
-            project_id: '8',
-            project_name: 'Facility Management',
-            project_description: 'Manage medical facilities and infrastructure',
-            icon: 'building',
-            url: '#',
-            project_type: 'Logistics',
+            project_type: 'disabled',
             low_project_name: '',
             permission: 0,
             project_cost: '',
@@ -213,6 +239,7 @@ export default function AppGrid() {
                         throw new Error(output as string);
                     }
                     apps = output as any[];
+                    apps = apps.map((a) => ({ ...a, icon: WebAssetOutlined }));
 
                     setApps([...defaultApps, ...apps, ...userApps]);
                 });

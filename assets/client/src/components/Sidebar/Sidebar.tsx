@@ -86,6 +86,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     });
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const savedApps = localStorage.getItem('dhaUserApps');
+    const userApps = Object.values(
+        savedApps ? JSON.parse(savedApps) : [],
+    ) as App[];
 
     // Fetch documents when vector DB changes
     useEffect(() => {

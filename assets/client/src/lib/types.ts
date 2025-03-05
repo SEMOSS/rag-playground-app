@@ -2,7 +2,7 @@ export interface App extends KnowledgeApp {
     project_id: string;
     project_name: string;
     project_description: string;
-    icon?: string;
+    icon?: string | any;
     url: string;
     project_type: string;
     low_project_name: string;
